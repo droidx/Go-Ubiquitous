@@ -32,8 +32,19 @@ import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.format.Time;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.DataApi;
+import com.google.android.gms.wearable.DataEvent;
+import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.DataItem;
+import com.google.android.gms.wearable.DataMap;
+import com.google.android.gms.wearable.DataMapItem;
+import com.google.android.gms.wearable.Wearable;
 
 import java.lang.ref.WeakReference;
 import java.util.TimeZone;
@@ -44,6 +55,8 @@ import java.util.concurrent.TimeUnit;
  * low-bit ambient mode, the text is drawn without anti-aliasing in ambient mode.
  */
 public class SunshineWatch extends CanvasWatchFaceService {
+
+    private static final String TAG = SunshineWatch.class.getSimpleName();
     private static final Typeface NORMAL_TYPEFACE =
             Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
@@ -83,7 +96,8 @@ public class SunshineWatch extends CanvasWatchFaceService {
         }
     }
 
-    private class Engine extends CanvasWatchFaceService.Engine {
+    private class Engine extends CanvasWatchFaceService.Engine implements DataApi.DataListener,
+            GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
         final Handler mUpdateTimeHandler = new EngineHandler(this);
         boolean mRegisteredTimeZoneReceiver = false;
         Paint mBackgroundPaint;
@@ -107,6 +121,14 @@ public class SunshineWatch extends CanvasWatchFaceService {
          * disable anti-aliasing in ambient mode.
          */
         boolean mLowBitAmbient;
+        GoogleApiClient mGoogleApiClient;
+        private static final String WATCH_FACE_PATH = "/watchface/temp";
+        private static final String TEMP_HIGH_KEY = "temp_high";
+        private static final String TEMP_LOW_KEY = "temp_low";
+        private static final String TEMP_WEATHER_ID_KEY = "temp_weather_id";
+        private int highTempToday;
+        private int lowTempToday;
+        private int weatherIdToday;
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -123,11 +145,17 @@ public class SunshineWatch extends CanvasWatchFaceService {
 
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(resources.getColor(R.color.background));
-
+            ;
             mTextPaint = new Paint();
             mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
 
             mTime = new Time();
+
+            mGoogleApiClient = new GoogleApiClient.Builder(SunshineWatch.this)
+                    .addApi(Wearable.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
         }
 
         @Override
@@ -149,12 +177,18 @@ public class SunshineWatch extends CanvasWatchFaceService {
             super.onVisibilityChanged(visible);
 
             if (visible) {
+
+                mGoogleApiClient.connect();
                 registerReceiver();
 
                 // Update time zone in case it changed while we weren't visible.
                 mTime.clear(TimeZone.getDefault().getID());
                 mTime.setToNow();
             } else {
+                if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+                    Wearable.DataApi.removeListener(mGoogleApiClient, this);
+                    mGoogleApiClient.disconnect();
+                }
                 unregisterReceiver();
             }
 
@@ -261,7 +295,7 @@ public class SunshineWatch extends CanvasWatchFaceService {
             String text = mAmbient
                     ? String.format("%d:%02d", mTime.hour, mTime.minute)
                     : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
-            canvas.drawText(text, mXOffset, mYOffset, mTextPaint);
+            canvas.drawText(highTempToday+"", mXOffset, mYOffset, mTextPaint);
         }
 
         /**
@@ -293,6 +327,48 @@ public class SunshineWatch extends CanvasWatchFaceService {
                 long delayMs = INTERACTIVE_UPDATE_RATE_MS
                         - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
                 mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
+            }
+        }
+
+        @Override
+        public void onConnected(Bundle bundle) {
+            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                Log.d(TAG, "onConnected: " + bundle);
+            }
+            Wearable.DataApi.addListener(mGoogleApiClient, Engine.this);
+
+            // TODO implement the below function
+            // updateConfigDataItemAndUiOnStartup();
+        }
+
+        @Override
+        public void onConnectionSuspended(int i) {
+            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                Log.d(TAG, "onConnectionSuspended: " + i);
+            }
+        }
+
+        @Override
+        public void onDataChanged(DataEventBuffer dataEventBuffer) {
+            for (DataEvent dataEvent : dataEventBuffer) {
+                if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
+                    DataItem dataItem = dataEvent.getDataItem();
+                    if (dataItem.getUri().getPath().compareTo(WATCH_FACE_PATH) == 0) {
+                        DataMap dataMap = DataMapItem.fromDataItem(dataItem).getDataMap();
+                        Log.d(TAG, dataMap.getInt(TEMP_HIGH_KEY) + "");
+                        highTempToday = dataMap.getInt(TEMP_HIGH_KEY);
+                        //updateCount(dataMap.getInt(COUNT_KEY));
+                    }
+
+                    invalidate();
+                }
+            }
+        }
+
+        @Override
+        public void onConnectionFailed(ConnectionResult connectionResult) {
+            if (Log.isLoggable(TAG, Log.DEBUG)) {
+                Log.d(TAG, "onConnectionFailed: " + connectionResult);
             }
         }
     }
