@@ -156,9 +156,9 @@ public class SunshineWatch extends CanvasWatchFaceService {
         boolean mLowBitAmbient;
         GoogleApiClient mGoogleApiClient;
 
-        private int highTempToday;
-        private int lowTempToday;
-        private int weatherIdToday;
+        private String mHighTempToday;
+        private String mLowTempToday;
+        private int mWeatherIdToday;
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -343,6 +343,7 @@ public class SunshineWatch extends CanvasWatchFaceService {
             boolean is24Hour = DateFormat.is24HourFormat(SunshineWatch.this);
 
             String hourString;
+            String minuteString = formatTwoDigitNumber(mCalendar.get(Calendar.MINUTE));
             if (is24Hour) {
                 hourString = formatTwoDigitNumber(mCalendar.get(Calendar.HOUR_OF_DAY));
             } else {
@@ -352,18 +353,33 @@ public class SunshineWatch extends CanvasWatchFaceService {
                 }
                 hourString = String.valueOf(hour);
             }
+
+            float timeLength = mTimeHourPaint.measureText(hourString) + mColonWidth + mTimeMinutePaint.measureText(minuteString);
+            x = (bounds.width() - timeLength) / 2;
             canvas.drawText(hourString, x, mYTimeOffset, mTimeHourPaint);
             x += mTimeHourPaint.measureText(hourString);
 
             canvas.drawText(COLON_STRING, x, mYTimeOffset, mTimeHourPaint);
             x += mColonWidth;
             // Draw the minutes.
-            String minuteString = formatTwoDigitNumber(mCalendar.get(Calendar.MINUTE));
             canvas.drawText(minuteString, x, mYTimeOffset, mTimeMinutePaint);
-            x += mTimeMinutePaint.measureText(minuteString);
 
             String date = DateUtils.formatDateTime(getApplicationContext(), millis, DateUtils.FORMAT_ABBREV_WEEKDAY | DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_MONTH);
-            canvas.drawText(date, mXOffset, mYDateOffset, mDatePaint);
+            x = (bounds.width() - mDatePaint.measureText(date)) / 2;
+            canvas.drawText(date, x, mYDateOffset, mDatePaint);
+
+            if (mHighTempToday != null) {
+                float tempHighLength = mTempHighPaint.measureText(mHighTempToday);
+                float lowTempLength = mLowTempToday != null ? mTempHighPaint.measureText(mHighTempToday) : 0;
+                float totalLen = tempHighLength + lowTempLength;
+                x = (bounds.width() - totalLen) / 2;
+                canvas.drawText(mHighTempToday, x, mYTemperatureOffset, mTempHighPaint);
+                if (mLowTempToday != null) {
+                    x += mTempHighPaint.measureText(mHighTempToday);
+                    canvas.drawText(mLowTempToday, x, mYTemperatureOffset, mTempLowPaint);
+                }
+            }
+
         }
 
         private String formatTwoDigitNumber(int hour) {
@@ -427,8 +443,8 @@ public class SunshineWatch extends CanvasWatchFaceService {
                     DataItem dataItem = dataEvent.getDataItem();
                     if (dataItem.getUri().getPath().compareTo(WATCH_FACE_PATH) == 0) {
                         DataMap dataMap = DataMapItem.fromDataItem(dataItem).getDataMap();
-                        Log.d(TAG, dataMap.getInt(TEMP_HIGH_KEY) + "");
-                        highTempToday = dataMap.getInt(TEMP_HIGH_KEY);
+                        mHighTempToday = dataMap.getString(TEMP_HIGH_KEY);
+                        mLowTempToday = dataMap.getString(TEMP_LOW_KEY);
                         //updateCount(dataMap.getInt(COUNT_KEY));
                     }
 

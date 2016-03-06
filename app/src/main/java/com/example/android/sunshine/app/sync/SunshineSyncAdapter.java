@@ -226,7 +226,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
     /**
      * Take the String representing the complete forecast in JSON Format and
      * pull out the data we need to construct the Strings needed for the wireframes.
-     * <p/>
+     * <p>
      * Fortunately parsing is easy:  constructor takes the JSON string and converts it
      * into an Object hierarchy for us.
      */
@@ -416,8 +416,8 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
     private void updateWearWatchFace(double highTemp, double lowTemp, int weatherId) {
         // put check for googleapi client connection
         PutDataMapRequest putDataMapReq = PutDataMapRequest.create(WATCH_FACE_PATH);
-        putDataMapReq.getDataMap().putInt(TEMP_HIGH_KEY, (int) highTemp);
-        putDataMapReq.getDataMap().putInt(TEMP_LOW_KEY, (int) lowTemp);
+        putDataMapReq.getDataMap().putString(TEMP_HIGH_KEY, Utility.formatTemperature(getContext(), highTemp));
+        putDataMapReq.getDataMap().putString(TEMP_LOW_KEY, Utility.formatTemperature(getContext(), lowTemp));
         putDataMapReq.getDataMap().putInt(TEMP_WEATHER_ID_KEY, weatherId);
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         putDataReq.setUrgent();
