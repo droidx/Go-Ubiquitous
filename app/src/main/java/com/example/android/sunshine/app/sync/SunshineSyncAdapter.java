@@ -57,7 +57,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Date;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 
@@ -227,7 +226,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
     /**
      * Take the String representing the complete forecast in JSON Format and
      * pull out the data we need to construct the Strings needed for the wireframes.
-     * <p>
+     * <p/>
      * Fortunately parsing is easy:  constructor takes the JSON string and converts it
      * into an Object hierarchy for us.
      */
@@ -420,7 +419,6 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
         putDataMapReq.getDataMap().putInt(TEMP_HIGH_KEY, (int) highTemp);
         putDataMapReq.getDataMap().putInt(TEMP_LOW_KEY, (int) lowTemp);
         putDataMapReq.getDataMap().putInt(TEMP_WEATHER_ID_KEY, weatherId);
-        putDataMapReq.getDataMap().putLong("time", new Date().getTime());
         PutDataRequest putDataReq = putDataMapReq.asPutDataRequest();
         putDataReq.setUrgent();
         PendingResult<DataApi.DataItemResult> pendingResult =
@@ -430,7 +428,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
             @Override
             public void onResult(DataApi.DataItemResult dataItemResult) {
                 // put logic here
-                Log.d("tag", "in on result" + dataItemResult);
+                Log.d(LOG_TAG, "in on result" + dataItemResult);
             }
         });
     }

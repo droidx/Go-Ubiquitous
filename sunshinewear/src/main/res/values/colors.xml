@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="background">#000000</color>
-    <color name="background2">#000088</color>
-    <color name="digital_text">#ffffff</color>
+    <color name="background">#03A9F4</color>
+    <color name="time_color">#FFFFFF</color>
+    <color name="date_color">#81D4FA</color>
+    <color name="divider_color">#81D4FA</color>
+    <color name="temp_low_color">#81D4FA</color>
+    <color name="temp_high_color">#FFFFFF</color>
 </resources>

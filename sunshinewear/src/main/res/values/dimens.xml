@@ -1,8 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="digital_text_size">40dp</dimen>
-    <dimen name="digital_text_size_round">45dp</dimen>
     <dimen name="digital_x_offset">15dp</dimen>
     <dimen name="digital_x_offset_round">25dp</dimen>
-    <dimen name="digital_y_offset">90dp</dimen>
+    <dimen name="time_text_size">36dp</dimen>
+    <dimen name="time_text_size_round">42dp</dimen>
+    <dimen name="date_text_size">14dp</dimen>
+    <dimen name="date_text_size_round">16dp</dimen>
+    <dimen name="temp_text_size">24dp</dimen>
+    <dimen name="temp_text_size_round">30dp</dimen>
+    <dimen name="temp_graphic_width">90dp</dimen>
+    <dimen name="temp_graphic_height">90dp</dimen>
+    <dimen name="time_y_offset">90dp</dimen>
+    <dimen name="time_y_offset_round">90dp</dimen>
+    <dimen name="date_y_offest">110dp</dimen>
+    <dimen name="date_y_offest_round">120dp</dimen>
+    <dimen name="divider_y_offest">140dp</dimen>
+    <dimen name="divider_y_offest_round">150dp</dimen>
+    <dimen name="temp_y_offest">170dp</dimen>
+    <dimen name="temp_y_offest_round">180dp</dimen>
 </resources>
