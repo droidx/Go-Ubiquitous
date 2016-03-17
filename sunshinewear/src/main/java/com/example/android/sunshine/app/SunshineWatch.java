@@ -58,6 +58,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Digital watch face with seconds. In ambient mode, the seconds aren't displayed. On devices with
  * low-bit ambient mode, the text is drawn without anti-aliasing in ambient mode.
+ * Reference: WatchFace sample
  */
 public class SunshineWatch extends CanvasWatchFaceService {
 
@@ -401,7 +402,7 @@ public class SunshineWatch extends CanvasWatchFaceService {
                     totalLen = tempHighLength + lowTempLength + mWeatherGraphic.getWidth();
                     x = (bounds.width() - totalLen) / 2;
                     canvas.drawBitmap(mWeatherGraphic, x, mYTemperatureOffset - mWeatherGraphic.getHeight(), null);
-                    x += mWeatherGraphic.getWidth();
+                    x += mWeatherGraphic.getWidth() + 5;
                 }
                 canvas.drawText(mHighTempToday, x, mYTemperatureOffset, mTempHighPaint);
                 x += mTempHighPaint.measureText(mHighTempToday);
