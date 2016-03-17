@@ -10,12 +10,12 @@
     <dimen name="temp_text_size_round">30dp</dimen>
     <dimen name="temp_graphic_width">90dp</dimen>
     <dimen name="temp_graphic_height">90dp</dimen>
-    <dimen name="time_y_offset">90dp</dimen>
-    <dimen name="time_y_offset_round">90dp</dimen>
-    <dimen name="date_y_offest">110dp</dimen>
-    <dimen name="date_y_offest_round">120dp</dimen>
-    <dimen name="divider_y_offest">140dp</dimen>
-    <dimen name="divider_y_offest_round">150dp</dimen>
-    <dimen name="temp_y_offest">170dp</dimen>
-    <dimen name="temp_y_offest_round">180dp</dimen>
+    <dimen name="time_y_offset">80dp</dimen>
+    <dimen name="time_y_offset_round">80dp</dimen>
+    <dimen name="date_y_offest">100dp</dimen>
+    <dimen name="date_y_offest_round">110dp</dimen>
+    <dimen name="divider_y_offest">115dp</dimen>
+    <dimen name="divider_y_offest_round">125dp</dimen>
+    <dimen name="temp_y_offest">150dp</dimen>
+    <dimen name="temp_y_offest_round">160dp</dimen>
 </resources>

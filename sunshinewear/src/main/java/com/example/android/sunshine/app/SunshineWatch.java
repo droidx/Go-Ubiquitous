@@ -125,8 +125,10 @@ public class SunshineWatch extends CanvasWatchFaceService {
         private Paint mTempHighPaint;
         // temp low
         private Paint mTempLowPaint;
-        // divider
-        private Paint mDividerPaint;
+
+        // ambient paint
+        private Paint mAmbientDatePaint;
+        private Paint mAmbientLowTempPaint;
 
         private Calendar mCalendar;
 
@@ -183,6 +185,8 @@ public class SunshineWatch extends CanvasWatchFaceService {
             mDatePaint = createTextPaint(ContextCompat.getColor(mContext, R.color.date_color));
             mTempHighPaint = createTextPaint(ContextCompat.getColor(mContext, R.color.temp_high_color));
             mTempLowPaint = createTextPaint(ContextCompat.getColor(mContext, R.color.temp_low_color));
+            mAmbientDatePaint = createTextPaint(Color.WHITE);
+            mAmbientLowTempPaint = createTextPaint(Color.WHITE);
 
             mCalendar = Calendar.getInstance();
             mGoogleApiClient = new GoogleApiClient.Builder(SunshineWatch.this)
@@ -277,6 +281,8 @@ public class SunshineWatch extends CanvasWatchFaceService {
             mDatePaint.setTextSize(dateTextSize);
             mTempHighPaint.setTextSize(tempTextSize);
             mTempLowPaint.setTextSize(tempTextSize);
+            mAmbientDatePaint.setTextSize(dateTextSize);
+            mAmbientLowTempPaint.setTextSize(tempTextSize);
             mColonWidth = mTimeHourPaint.measureText(COLON_STRING);
         }
 
@@ -298,7 +304,13 @@ public class SunshineWatch extends CanvasWatchFaceService {
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
                 if (mLowBitAmbient) {
-                    // mTextPaint.setAntiAlias(!inAmbientMode);
+                    mTimeHourPaint.setAntiAlias(!inAmbientMode);
+                    mTimeMinutePaint.setAntiAlias(!inAmbientMode);
+                    mDatePaint.setAntiAlias(!inAmbientMode);
+                    mAmbientDatePaint.setAntiAlias(!inAmbientMode);
+                    mTempHighPaint.setAntiAlias(!inAmbientMode);
+                    mTempLowPaint.setAntiAlias(!inAmbientMode);
+                    mAmbientLowTempPaint.setAntiAlias(!inAmbientMode);
                 }
                 invalidate();
             }
@@ -334,11 +346,18 @@ public class SunshineWatch extends CanvasWatchFaceService {
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
+
+            Paint datePaint;
+            Paint lowTempPaint;
             // Draw the background.
             if (isInAmbientMode()) {
                 canvas.drawColor(Color.BLACK);
+                datePaint = mAmbientDatePaint;
+                lowTempPaint = mAmbientLowTempPaint;
             } else {
                 canvas.drawRect(0, 0, bounds.width(), bounds.height(), mBackgroundPaint);
+                datePaint = mDatePaint;
+                lowTempPaint = mTempLowPaint;
             }
 
             float x = mXOffset;
@@ -369,22 +388,24 @@ public class SunshineWatch extends CanvasWatchFaceService {
             canvas.drawText(minuteString, x, mYTimeOffset, mTimeMinutePaint);
 
             String date = DateUtils.formatDateTime(getApplicationContext(), millis, DateUtils.FORMAT_ABBREV_WEEKDAY | DateUtils.FORMAT_SHOW_WEEKDAY | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_MONTH);
-            x = (bounds.width() - mDatePaint.measureText(date)) / 2;
-            canvas.drawText(date, x, mYDateOffset, mDatePaint);
+            x = (bounds.width() - datePaint.measureText(date)) / 2;
+            canvas.drawText(date, x, mYDateOffset, datePaint);
 
             if (mHighTempToday != null && mLowTempToday != null && mWeatherGraphic != null) {
-
-                canvas.drawLine(bounds.centerX() - 100, mYDividerOffset, bounds.centerX() + 100, mYDividerOffset, mDatePaint);
+                canvas.drawLine(bounds.centerX() - 24, mYDividerOffset, bounds.centerX() + 24, mYDividerOffset, datePaint);
                 float tempHighLength = mTempHighPaint.measureText(mHighTempToday);
-                float lowTempLength = mLowTempToday != null ? mTempHighPaint.measureText(mHighTempToday) : 0;
-                float totalLen = tempHighLength + lowTempLength + mWeatherGraphic.getWidth();
-                float diff = (mTempHighPaint.getTextSize() - mWeatherGraphic.getHeight()) / 2;
+                float lowTempLength = lowTempPaint.measureText(mLowTempToday);
+                float totalLen = tempHighLength + lowTempLength;
                 x = (bounds.width() - totalLen) / 2;
-                canvas.drawBitmap(mWeatherGraphic, x, mYTemperatureOffset - mWeatherGraphic.getHeight() + diff, null);
-                x += mWeatherGraphic.getWidth();
+                if (!mAmbient) {
+                    totalLen = tempHighLength + lowTempLength + mWeatherGraphic.getWidth();
+                    x = (bounds.width() - totalLen) / 2;
+                    canvas.drawBitmap(mWeatherGraphic, x, mYTemperatureOffset - mWeatherGraphic.getHeight(), null);
+                    x += mWeatherGraphic.getWidth();
+                }
                 canvas.drawText(mHighTempToday, x, mYTemperatureOffset, mTempHighPaint);
                 x += mTempHighPaint.measureText(mHighTempToday);
-                canvas.drawText(mLowTempToday, x, mYTemperatureOffset, mTempLowPaint);
+                canvas.drawText(mLowTempToday, x, mYTemperatureOffset, lowTempPaint);
             }
         }
 
