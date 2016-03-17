@@ -21,6 +21,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -112,21 +114,21 @@ public class SunshineWatch extends CanvasWatchFaceService {
         boolean mRegisteredTimeZoneReceiver = false;
 
         // background
-        Paint mBackgroundPaint;
+        private Paint mBackgroundPaint;
         // time hour
-        Paint mTimeHourPaint;
+        private Paint mTimeHourPaint;
         // time minute
-        Paint mTimeMinutePaint;
+        private Paint mTimeMinutePaint;
         // date
-        Paint mDatePaint;
+        private Paint mDatePaint;
         // temp high
-        Paint mTempHighPaint;
+        private Paint mTempHighPaint;
         // temp low
-        Paint mTempLowPaint;
+        private Paint mTempLowPaint;
         // divider
-        Paint mDividerPaint;
+        private Paint mDividerPaint;
 
-        Calendar mCalendar;
+        private Calendar mCalendar;
 
         boolean mAmbient;
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -140,12 +142,14 @@ public class SunshineWatch extends CanvasWatchFaceService {
 
 
         // Offsets
-        float mXOffset;
-        float mYTimeOffset;
-        float mYDateOffset;
-        float mYDividerOffset;
-        float mYTemperatureOffset;
-        float mColonWidth;
+        private float mXOffset;
+        private float mYTimeOffset;
+        private float mYDateOffset;
+        private float mYDividerOffset;
+        private float mYTemperatureOffset;
+        private float mColonWidth;
+
+        private Bitmap mWeatherGraphic;
 
         private Context mContext;
 
@@ -154,7 +158,7 @@ public class SunshineWatch extends CanvasWatchFaceService {
          * disable anti-aliasing in ambient mode.
          */
         boolean mLowBitAmbient;
-        GoogleApiClient mGoogleApiClient;
+        private GoogleApiClient mGoogleApiClient;
 
         private String mHighTempToday;
         private String mLowTempToday;
@@ -368,18 +372,20 @@ public class SunshineWatch extends CanvasWatchFaceService {
             x = (bounds.width() - mDatePaint.measureText(date)) / 2;
             canvas.drawText(date, x, mYDateOffset, mDatePaint);
 
-            if (mHighTempToday != null) {
+            if (mHighTempToday != null && mLowTempToday != null && mWeatherGraphic != null) {
+
+                canvas.drawLine(bounds.centerX() - 100, mYDividerOffset, bounds.centerX() + 100, mYDividerOffset, mDatePaint);
                 float tempHighLength = mTempHighPaint.measureText(mHighTempToday);
                 float lowTempLength = mLowTempToday != null ? mTempHighPaint.measureText(mHighTempToday) : 0;
-                float totalLen = tempHighLength + lowTempLength;
+                float totalLen = tempHighLength + lowTempLength + mWeatherGraphic.getWidth();
+                float diff = (mTempHighPaint.getTextSize() - mWeatherGraphic.getHeight()) / 2;
                 x = (bounds.width() - totalLen) / 2;
+                canvas.drawBitmap(mWeatherGraphic, x, mYTemperatureOffset - mWeatherGraphic.getHeight() + diff, null);
+                x += mWeatherGraphic.getWidth();
                 canvas.drawText(mHighTempToday, x, mYTemperatureOffset, mTempHighPaint);
-                if (mLowTempToday != null) {
-                    x += mTempHighPaint.measureText(mHighTempToday);
-                    canvas.drawText(mLowTempToday, x, mYTemperatureOffset, mTempLowPaint);
-                }
+                x += mTempHighPaint.measureText(mHighTempToday);
+                canvas.drawText(mLowTempToday, x, mYTemperatureOffset, mTempLowPaint);
             }
-
         }
 
         private String formatTwoDigitNumber(int hour) {
@@ -445,7 +451,17 @@ public class SunshineWatch extends CanvasWatchFaceService {
                         DataMap dataMap = DataMapItem.fromDataItem(dataItem).getDataMap();
                         mHighTempToday = dataMap.getString(TEMP_HIGH_KEY);
                         mLowTempToday = dataMap.getString(TEMP_LOW_KEY);
+
+                        if (dataMap.containsKey(TEMP_WEATHER_ID_KEY)) {
+                            mWeatherIdToday = dataMap.getInt(TEMP_WEATHER_ID_KEY);
+                            int weatherDrawable = Utility.getIconResourceForWeatherCondition(mWeatherIdToday);
+                            Bitmap weatherBitmap = BitmapFactory.decodeResource(getApplicationContext().getResources(), weatherDrawable);
+                            float width = (weatherBitmap.getWidth() * mTempHighPaint.getTextSize()) / weatherBitmap.getHeight();
+                            mWeatherGraphic = Bitmap.createScaledBitmap(weatherBitmap, (int) width, (int) mTempHighPaint.getTextSize(), true);
+                        }
                         //updateCount(dataMap.getInt(COUNT_KEY));
+
+
                     }
 
                     invalidate();
